@@ -21,6 +21,7 @@ import (
 	"todo-app/pkg/jwt"
 	"todo-app/pkg/logger"
 
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
@@ -85,7 +86,8 @@ func main() {
 	taskHandler := handler.NewTaskHandler(taskService, emailService)
 
 	r := gin.New()
-	r.Use(gin.Recovery(), gin.Logger())
+	r.Use(ginzap.Ginzap(zapLogger, time.RFC3339, true))
+	r.Use(ginzap.RecoveryWithZap(zapLogger, true))
 
 	routers.SetupRoutes(r, tokenManager, authHandler, taskHandler)
 
