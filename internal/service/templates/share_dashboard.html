@@ -8,14 +8,13 @@
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px;">
 
 <div style="max-width: 560px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; padding: 32px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); border: 1px solid #e1e4e8;">
-
     <table style="border-collapse: collapse; border-spacing: 0; margin-bottom: 24px; border: 0;">
         <tr>
-            <td style="background-color: #4f46e5; color: #ffffff; font-weight: 800; font-size: 20px; border-radius: 8px; width: 40px; height: 40px; text-align: center; vertical-align: middle;">
+            <td style="background-color: #10b981; color: #ffffff; font-weight: 800; font-size: 20px; border-radius: 8px; width: 40px; height: 40px; text-align: center; vertical-align: middle;">
                 ✓
             </td>
             <td style="padding-left: 12px; font-size: 20px; font-weight: 700; color: #111827; letter-spacing: -0.5px;">
-                TodoApp
+                {{.AppName}}
             </td>
         </tr>
     </table>
@@ -27,24 +26,24 @@
     </h2>
 
     <p style="color: #4b5563; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
-        Користувач <strong style="color: #111827;">{{.SenderEmail}}</strong> поділився з вами своїм списком задач у сервісі <strong>TodoApp</strong>. Перейдіть за посиланням нижче, щоб переглянути актуальні задачі.
+        Користувач <strong style="color: #111827;">{{.SenderEmail}}</strong> поділився з вами своїм списком задач у сервісі <strong>{{.AppName}}</strong>. Перейдіть за посиланням нижче, щоб переглянути актуальні задачі.
     </p>
 
     <div style="text-align: center; margin: 32px 0;">
-        <a href="{{.DashboardURL}}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; font-size: 15px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 8px; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);">
-            Перейти в TodoApp →
+        <a href="{{.DashboardURL}}" target="_blank" style="display: inline-block; background-color: #10b981; color: #ffffff; font-size: 15px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 8px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">
+            Перейти в {{.AppName}} →
         </a>
     </div>
 
     <p style="color: #6b7280; font-size: 13px; line-height: 1.5; margin-top: 32px; padding-top: 20px; border-top: 1px solid #f3f4f6; margin-bottom: 0;">
         Якщо кнопка не працює, скопіюйте це посилання у браузер:<br>
-        <a href="{{.DashboardURL}}" style="color: #4f46e5; word-break: break-all; text-decoration: underline;">{{.DashboardURL}}</a>
+        <a href="{{.DashboardURL}}" target="_blank" style="color: #10b981; word-break: break-all; text-decoration: underline;">{{.DashboardURL}}</a>
     </p>
 </div>
 
 <div style="text-align: center; max-width: 560px; margin: 0 auto; padding-top: 12px;">
     <p style="color: #9ca3af; font-size: 12px;">
-        Це автоматичне повідомлення від сервісу TodoApp.
+        Це автоматичне повідомлення від сервісу {{.AppName}}.
     </p>
 </div>
 

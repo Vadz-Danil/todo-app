@@ -63,8 +63,8 @@ func setupTaskRouter(taskService *MockTaskService, emailService *MockEmailServic
 			c.Next()
 		})
 	}
-
-	h := handler.NewTaskHandler(taskService, emailService, authService)
+	frontendURL := "http://localhost:3000"
+	h := handler.NewTaskHandler(taskService, emailService, authService, frontendURL)
 
 	r.POST("/tasks", h.CreateTask)
 	r.GET("/tasks", h.GetTasks)

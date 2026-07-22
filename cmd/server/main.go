@@ -95,7 +95,7 @@ func main() {
 	}
 
 	authHandler := handler.NewAuthHandler(authService)
-	taskHandler := handler.NewTaskHandler(taskService, emailService, authService)
+	taskHandler := handler.NewTaskHandler(taskService, emailService, authService, cfg.FrontendURL)
 
 	r := gin.New()
 	r.Use(ginzap.Ginzap(zapLogger, time.RFC3339, true))

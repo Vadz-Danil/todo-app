@@ -75,7 +75,7 @@ func (s *TaskService) GetTasks(ctx context.Context, userID uuid.UUID) ([]models.
 }
 
 func (s *TaskService) UpdateTaskStatus(ctx context.Context, taskID string, userID uuid.UUID, status models.TaskStatus) error {
-	if status != models.StatusTodo && status != models.StatusDone {
+	if status != models.StatusTodo && status != models.StatusDone && status != models.StatusInProgress {
 		return apperrors.ErrInvalidTaskStatus
 	}
 

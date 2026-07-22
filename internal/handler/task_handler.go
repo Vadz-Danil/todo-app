@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"todo-app/internal/apperrors"
@@ -16,13 +17,15 @@ type TaskHandler struct {
 	taskService  service.Task
 	emailService service.Email
 	authService  service.Auth
+	frontendURL  string
 }
 
-func NewTaskHandler(taskService service.Task, emailService service.Email, authService service.Auth) *TaskHandler {
+func NewTaskHandler(taskService service.Task, emailService service.Email, authService service.Auth, frontendURL string) *TaskHandler {
 	return &TaskHandler{
 		taskService:  taskService,
 		emailService: emailService,
 		authService:  authService,
+		frontendURL:  frontendURL,
 	}
 }
 
@@ -123,8 +126,7 @@ func (h *TaskHandler) ShareTasks(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user profile"})
 		return
 	}
-
-	dashboardURL := "http://localhost:3000/dashboard"
+	dashboardURL := fmt.Sprintf("%s/dashboard", h.frontendURL)
 
 	err = h.emailService.ShareTasks(c.Request.Context(), req.RecipientEmail, user.Email, dashboardURL)
 	if err != nil {

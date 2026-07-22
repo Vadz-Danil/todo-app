@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Port        string
 	DatabaseURL string
+	FrontendURL string
 	JWT         JWTConfig
 	Google      GoogleConfig
 	SMTP        SMTPConfig
@@ -56,6 +57,7 @@ func LoadConfig(logger *zap.Logger) *Config {
 	return &Config{
 		Port:        mustGetEnv("PORT", logger),
 		DatabaseURL: mustGetEnv("DATABASE_URL", logger),
+		FrontendURL: mustGetEnv("FRONTEND_URL", logger),
 		JWT: JWTConfig{
 			Secret:          mustGetEnv("JWT_SECRET", logger),
 			AccessTokenTTL:  accessTTL,
