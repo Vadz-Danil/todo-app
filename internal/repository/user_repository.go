@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
+
 	"todo-app/internal/apperrors"
 	"todo-app/internal/models"
 
@@ -15,7 +17,9 @@ import (
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *models.User) error
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 	FindOrCreateGoogleUser(ctx context.Context, email, googleID string) (*models.User, error)
+	SetPasswordHash(ctx context.Context, userID uuid.UUID, passwordHash string) error
 }
 
 type UserPostgres struct {
@@ -64,6 +68,31 @@ func (r *UserPostgres) GetUserByEmail(ctx context.Context, email string) (*model
 	return user, nil
 }
 
+func (r *UserPostgres) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	query := `
+        SELECT id, email, password_hash, google_id, created_at 
+        FROM users 
+        WHERE id = $1
+    `
+	user := &models.User{}
+
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.GoogleID,
+		&user.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apperrors.ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (r *UserPostgres) FindOrCreateGoogleUser(ctx context.Context, email, googleID string) (*models.User, error) {
 	query := `SELECT id, email, password_hash, google_id, created_at FROM users WHERE google_id = $1 OR email = $2`
 	user := &models.User{}
@@ -72,7 +101,9 @@ func (r *UserPostgres) FindOrCreateGoogleUser(ctx context.Context, email, google
 	if err == nil {
 		if user.GoogleID == nil {
 			updateQuery := `UPDATE users SET google_id = $1 WHERE id = $2`
-			r.db.ExecContext(ctx, updateQuery, googleID, user.ID)
+			if _, execErr := r.db.ExecContext(ctx, updateQuery, googleID, user.ID); execErr != nil {
+				return nil, fmt.Errorf("failed to update user google_id: %w", execErr)
+			}
 			user.GoogleID = &googleID
 		}
 		return user, nil
@@ -90,4 +121,12 @@ func (r *UserPostgres) FindOrCreateGoogleUser(ctx context.Context, email, google
 		return nil, err
 	}
 	return newUser, nil
+}
+func (r *UserPostgres) SetPasswordHash(ctx context.Context, userID uuid.UUID, passwordHash string) error {
+	query := `UPDATE users SET password_hash = $1 WHERE id = $2`
+	_, err := r.db.ExecContext(ctx, query, passwordHash, userID)
+	if err != nil {
+		return fmt.Errorf("failed to set password hash: %w", err)
+	}
+	return nil
 }

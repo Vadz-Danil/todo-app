@@ -40,7 +40,7 @@ func (p *GoogleProvider) GetAuthURL(state string) string {
 	return p.config.AuthCodeURL(state)
 }
 
-func (p *GoogleProvider) ExchangeCode(ctx context.Context, code string) (*GoogleUserInfo, error) {
+func (p *GoogleProvider) ExchangeCode(ctx context.Context, code string) (userInfo *GoogleUserInfo, err error) {
 	token, err := p.config.Exchange(ctx, code)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange code: %w", err)
@@ -51,16 +51,21 @@ func (p *GoogleProvider) ExchangeCode(ctx context.Context, code string) (*Google
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			err = errors.Join(err, fmt.Errorf("failed to close response body: %w", closeErr))
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New("failed to fetch user info from google")
 	}
 
-	var userInfo GoogleUserInfo
-	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+	var info GoogleUserInfo
+	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
 		return nil, fmt.Errorf("failed to decode user info: %w", err)
 	}
 
-	return &userInfo, nil
+	return &info, nil
 }

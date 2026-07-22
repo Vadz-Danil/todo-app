@@ -15,12 +15,14 @@ import (
 type TaskHandler struct {
 	taskService  *service.TaskService
 	emailService *service.EmailService
+	authService  *service.AuthService
 }
 
-func NewTaskHandler(taskService *service.TaskService, emailService *service.EmailService) *TaskHandler {
+func NewTaskHandler(taskService *service.TaskService, emailService *service.EmailService, authService *service.AuthService) *TaskHandler {
 	return &TaskHandler{
 		taskService:  taskService,
 		emailService: emailService,
+		authService:  authService,
 	}
 }
 
@@ -76,6 +78,10 @@ func (h *TaskHandler) UpdateTaskStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Task ID is required"})
 		return
 	}
+	if _, err := uuid.Parse(taskID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid task ID format"})
+		return
+	}
 
 	var req UpdateTaskStatusRequest
 
@@ -107,27 +113,23 @@ func (h *TaskHandler) ShareTasks(c *gin.Context) {
 	}
 
 	var req ShareTasksRequest
-
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": apperrors.ErrEmptyRecipient.Error()})
 		return
 	}
 
-	tasks, err := h.taskService.GetTasks(c.Request.Context(), userID)
+	user, err := h.authService.GetUserByID(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve tasks for sharing"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user profile"})
 		return
 	}
 
-	taskTitles := make([]string, 0, len(tasks))
-	for _, task := range tasks {
-		taskTitles = append(taskTitles, task.Title)
-	}
+	dashboardURL := "http://localhost:3000/dashboard"
 
-	err = h.emailService.ShareTasks(c.Request.Context(), req.RecipientEmail, taskTitles)
+	err = h.emailService.ShareTasks(c.Request.Context(), req.RecipientEmail, user.Email, dashboardURL)
 	if err != nil {
 		switch {
-		case errors.Is(err, apperrors.ErrEmptyRecipient), errors.Is(err, apperrors.ErrEmptyTaskList):
+		case errors.Is(err, apperrors.ErrEmptyRecipient):
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send email"})

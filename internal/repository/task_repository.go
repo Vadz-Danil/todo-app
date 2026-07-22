@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"todo-app/internal/apperrors"
 	"todo-app/internal/models"
 
 	"github.com/google/uuid"
@@ -32,15 +34,20 @@ func (r *TaskPostgres) CreateTask(ctx context.Context, task *models.Task) error 
 	return err
 }
 
-func (r *TaskPostgres) GetTasksByUserID(ctx context.Context, userID uuid.UUID) ([]models.Task, error) {
-	query := `SELECT id, user_id, title,description, status, created_at FROM tasks WHERE user_id = $1 ORDER BY created_at DESC`
+func (r *TaskPostgres) GetTasksByUserID(ctx context.Context, userID uuid.UUID) (tasks []models.Task, err error) {
+	query := `SELECT id, user_id, title, description, status, created_at FROM tasks WHERE user_id = $1 ORDER BY created_at DESC`
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	tasks := make([]models.Task, 0)
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			err = errors.Join(err, fmt.Errorf("failed to close rows: %w", closeErr))
+		}
+	}()
+
+	tasks = make([]models.Task, 0)
 	for rows.Next() {
 		var t models.Task
 		if err := rows.Scan(&t.ID, &t.UserID, &t.Title, &t.Description, &t.Status, &t.CreatedAt); err != nil {
@@ -48,6 +55,11 @@ func (r *TaskPostgres) GetTasksByUserID(ctx context.Context, userID uuid.UUID) (
 		}
 		tasks = append(tasks, t)
 	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error during rows iteration: %w", err)
+	}
+
 	return tasks, nil
 }
 
@@ -57,9 +69,14 @@ func (r *TaskPostgres) UpdateTaskStatus(ctx context.Context, id string, userID u
 	if err != nil {
 		return err
 	}
-	rowsAffected, _ := res.RowsAffected()
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
 	if rowsAffected == 0 {
-		return errors.New("task not found or permission denied")
+		return apperrors.ErrTaskNotFound
 	}
 	return nil
 }

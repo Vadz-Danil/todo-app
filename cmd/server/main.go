@@ -32,7 +32,11 @@ func main() {
 	if err != nil {
 		panic("failed to initialize logger: " + err.Error())
 	}
-	defer zapLogger.Sync()
+	defer func() {
+		if err := zapLogger.Sync(); err != nil {
+			_ = err
+		}
+	}()
 
 	cfg := config.LoadConfig(zapLogger)
 
@@ -40,7 +44,12 @@ func main() {
 	if err != nil {
 		zapLogger.Fatal("failed to open database connection", zap.Error(err))
 	}
-	defer db.Close()
+
+	defer func() {
+		if err := db.Close(); err != nil {
+			zapLogger.Error("failed to close database connection", zap.Error(err))
+		}
+	}()
 
 	if err := db.Ping(); err != nil {
 		zapLogger.Fatal("failed to ping database", zap.Error(err))
@@ -80,10 +89,13 @@ func main() {
 
 	authService := service.NewAuthService(userRepo, tokenManager, googleProvider, zapLogger)
 	taskService := service.NewTaskService(taskRepo, zapLogger)
-	emailService := service.NewEmailService(mailer, zapLogger)
+	emailService, err := service.NewEmailService(mailer, zapLogger)
+	if err != nil {
+		zapLogger.Fatal("failed to initialize email service", zap.Error(err))
+	}
 
 	authHandler := handler.NewAuthHandler(authService)
-	taskHandler := handler.NewTaskHandler(taskService, emailService)
+	taskHandler := handler.NewTaskHandler(taskService, emailService, authService)
 
 	r := gin.New()
 	r.Use(ginzap.Ginzap(zapLogger, time.RFC3339, true))

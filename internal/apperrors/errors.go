@@ -10,6 +10,5 @@ var (
 	ErrEmptyTaskTitle     = errors.New("task title cannot be empty")
 	ErrInvalidTaskStatus  = errors.New("invalid task status")
 	ErrEmptyRecipient     = errors.New("recipient email is required")
-	ErrEmptyTaskList      = errors.New("task list is empty, nothing to share")
 	ErrUnauthorized       = errors.New("unauthorized access")
 )

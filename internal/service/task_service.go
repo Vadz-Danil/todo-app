@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -74,7 +75,7 @@ func (s *TaskService) UpdateTaskStatus(ctx context.Context, taskID string, userI
 
 	err := s.taskRepo.UpdateTaskStatus(ctx, taskID, userID, status)
 	if err != nil {
-		if err.Error() == "task not found or permission denied" {
+		if errors.Is(err, apperrors.ErrTaskNotFound) {
 			return apperrors.ErrTaskNotFound
 		}
 		s.logger.Error("failed to update task status", zap.Error(err))

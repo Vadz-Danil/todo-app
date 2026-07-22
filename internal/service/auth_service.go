@@ -43,6 +43,28 @@ func (s *AuthService) Register(ctx context.Context, email, password string) erro
 		return apperrors.ErrInvalidCredentials
 	}
 
+	existingUser, err := s.userRepo.GetUserByEmail(ctx, email)
+	if err == nil {
+		if existingUser.PasswordHash != nil {
+			return apperrors.ErrUserAlreadyExists
+		}
+		hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			s.logger.Error("failed to hash password", zap.Error(err))
+			return err
+		}
+
+		if err := s.userRepo.SetPasswordHash(ctx, existingUser.ID, string(hashedBytes)); err != nil {
+			s.logger.Error("failed to link password to existing google user", zap.Error(err))
+			return err
+		}
+
+		return nil
+	} else if !errors.Is(err, apperrors.ErrUserNotFound) {
+		s.logger.Error("failed to check existing user in db", zap.Error(err))
+		return err
+	}
+
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		s.logger.Error("failed to hash password", zap.Error(err))
@@ -95,6 +117,17 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 	return accessToken, refreshToken, nil
 }
 
+func (s *AuthService) GetUserByID(ctx context.Context, userID uuid.UUID) (*models.User, error) {
+	user, err := s.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		if !errors.Is(err, apperrors.ErrUserNotFound) {
+			s.logger.Error("failed to get user by id", zap.Error(err), zap.String("user_id", userID.String()))
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
 func (s *AuthService) GoogleLogin(ctx context.Context, code string) (string, string, error) {
 	if strings.TrimSpace(code) == "" {
 		return "", "", apperrors.ErrInvalidCredentials
@@ -125,7 +158,7 @@ func (s *AuthService) GoogleLogin(ctx context.Context, code string) (string, str
 	return accessToken, refreshToken, nil
 }
 
-func (s *AuthService) RefreshToken(ctx context.Context, refreshTokenStr string) (string, string, error) {
+func (s *AuthService) RefreshToken(refreshTokenStr string) (string, string, error) {
 	userID, err := s.tokenManager.ParseRefreshToken(refreshTokenStr)
 	if err != nil {
 		return "", "", apperrors.ErrUnauthorized
