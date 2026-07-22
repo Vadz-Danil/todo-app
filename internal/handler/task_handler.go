@@ -13,12 +13,12 @@ import (
 )
 
 type TaskHandler struct {
-	taskService  *service.TaskService
-	emailService *service.EmailService
-	authService  *service.AuthService
+	taskService  service.Task
+	emailService service.Email
+	authService  service.Auth
 }
 
-func NewTaskHandler(taskService *service.TaskService, emailService *service.EmailService, authService *service.AuthService) *TaskHandler {
+func NewTaskHandler(taskService service.Task, emailService service.Email, authService service.Auth) *TaskHandler {
 	return &TaskHandler{
 		taskService:  taskService,
 		emailService: emailService,

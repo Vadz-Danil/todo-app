@@ -16,6 +16,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type Auth interface {
+	Register(ctx context.Context, email, password string) error
+	Login(ctx context.Context, email, password string) (string, string, error)
+	GoogleLogin(ctx context.Context, code string) (string, string, error)
+	RefreshToken(refreshTokenStr string) (string, string, error)
+	GetUserByID(ctx context.Context, userID uuid.UUID) (*models.User, error)
+}
+
 type AuthService struct {
 	userRepo       repository.UserRepository
 	tokenManager   *jwt.TokenManager

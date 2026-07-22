@@ -14,6 +14,10 @@ import (
 	"go.uber.org/zap"
 )
 
+type Email interface {
+	ShareTasks(ctx context.Context, recipientEmail, senderEmail, dashboardURL string) error
+}
+
 //go:embed templates/*
 var templateFS embed.FS
 

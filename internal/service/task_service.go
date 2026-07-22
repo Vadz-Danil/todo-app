@@ -14,6 +14,12 @@ import (
 	"go.uber.org/zap"
 )
 
+type Task interface {
+	CreateTask(ctx context.Context, userID uuid.UUID, title string, description *string) (*models.Task, error)
+	GetTasks(ctx context.Context, userID uuid.UUID) ([]models.Task, error)
+	UpdateTaskStatus(ctx context.Context, taskID string, userID uuid.UUID, status models.TaskStatus) error
+}
+
 type TaskService struct {
 	taskRepo repository.TaskRepository
 	logger   *zap.Logger
