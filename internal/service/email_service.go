@@ -81,7 +81,10 @@ func (s *EmailService) ShareTasks(ctx context.Context, recipientEmail, senderEma
 			zap.String("to", recipientEmail),
 			zap.String("transport", s.sender.Name()),
 		)
-		return err
+		// The provider refusing or being unreachable is an upstream failure,
+		// not a fault in this server, so it must not read as a 500. The cause
+		// stays wrapped for the log; callers only see that delivery failed.
+		return fmt.Errorf("%w: %w", apperrors.ErrEmailDelivery, err)
 	}
 
 	s.logger.Info("share tasks email sent successfully",

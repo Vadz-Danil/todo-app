@@ -125,6 +125,7 @@ func respondServiceError(c *gin.Context, err error, fallbackMessage string) bool
 
 	case errors.Is(err, apperrors.ErrAIUnavailable),
 		errors.Is(err, apperrors.ErrAIBadResponse),
+		errors.Is(err, apperrors.ErrEmailDelivery),
 		errors.Is(err, apperrors.ErrExportFailed):
 		c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
 
