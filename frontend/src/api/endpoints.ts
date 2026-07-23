@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { api } from './client';
 import type {
     AISummary,
@@ -8,6 +9,9 @@ import type {
     ExportTarget,
     Granularity,
     PlanningSession,
+    ShareKind,
+    ShareLink,
+    SharedView,
     Sprint,
     Task,
     TaskInput,
@@ -288,3 +292,50 @@ export const listDeliveries = async (limit = 50): Promise<ExportDelivery[]> => {
     const { data } = await api.get('/api/export/deliveries', { params: { limit } });
     return data?.deliveries ?? [];
 };
+
+// --- share links -----------------------------------------------------------
+
+export interface ShareLinkInput {
+    kind?: ShareKind;
+    label?: string;
+    /** Omit for a link that never expires. */
+    ttl_days?: number;
+}
+
+export const createShareLink = async (input: ShareLinkInput = {}): Promise<ShareLink> =>
+    (await api.post<ShareLink>('/api/share-links', input)).data;
+
+export const listShareLinks = async (): Promise<ShareLink[]> => {
+    const { data } = await api.get('/api/share-links');
+    return data?.links ?? [];
+};
+
+export const revokeShareLink = async (id: string): Promise<void> => {
+    await api.post(`/api/share-links/${id}/revoke`);
+};
+
+export const deleteShareLink = async (id: string): Promise<void> => {
+    await api.delete(`/api/share-links/${id}`);
+};
+
+/**
+ * Reads a public share link. Deliberately uses a bare axios call rather than
+ * the shared client: that client attaches the viewer's token and retries
+ * through /auth/refresh on a 401, neither of which makes sense for a page
+ * meant to work with no account at all.
+ */
+export const fetchSharedView = async (
+    token: string,
+    p: AnalyticsParams = { period: 'month' }
+): Promise<SharedView> => {
+    const base = import.meta.env.VITE_API_BASE_URL || '';
+    const { data } = await axios.get<SharedView>(
+        `${base}/public/share/${encodeURIComponent(token)}`,
+        { params: analyticsQuery(p) }
+    );
+    return data;
+};
+
+/** The absolute URL to hand to someone. */
+export const shareLinkURL = (token: string): string =>
+    `${window.location.origin}/s/${token}`;

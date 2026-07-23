@@ -106,6 +106,33 @@ the user wants on top of it — those three topics are mandatory before `READY`.
 | PATCH | `/api/sprints/:id` |
 | DELETE | `/api/sprints/:id` → `204` (tasks are detached, not deleted) |
 
+## Share links (read-only, no account needed)
+
+Sharing does not depend on email. The owner mints a link; anyone holding it
+sees a read-only copy.
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| GET | `/api/share-links` | → `{links: ShareLink[]}` — the token is never returned again |
+| POST | `/api/share-links` | `{kind?, label?, ttl_days?}` → `ShareLink` **with `token`, shown once**. `kind` is `BOARD` (default), `DASHBOARD` or `BOTH`; omit `ttl_days` for no expiry (1–365) |
+| POST | `/api/share-links/:id/revoke` | 204 — kills the link but keeps its view history |
+| DELETE | `/api/share-links/:id` | 204 — removes the row entirely |
+| GET | `/public/share/:token` | **No auth.** → `SharedView`. Accepts the usual analytics params when the link includes a dashboard |
+
+The recipient opens `/s/<token>` (or `/?s=<token>` where the host does not
+rewrite unknown paths to `index.html`).
+
+Notes:
+
+- Only a SHA-256 hash of the token is stored, so a database leak yields no
+  working links. The plaintext exists solely in the create response.
+- Unknown, revoked and expired tokens all answer `404` with the same body, so
+  probing cannot distinguish a token that was once real.
+- `SharedView` carries `SharedTask`, an explicit allowlist of fields — no
+  `user_id`, no `sprint_id`. Adding a private field to `Task` cannot leak it.
+- The response is sent `Cache-Control: no-store` and `X-Robots-Tag: noindex`.
+- Up to 25 active links per user.
+
 ## Export ("push my data to some server")
 
 | Method | Path | Notes |

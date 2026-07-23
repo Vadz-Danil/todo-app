@@ -8,6 +8,7 @@ import { KanbanBoard } from './components/board/KanbanBoard';
 import { Dashboard } from './components/Dashboard';
 import { AIPlanner } from './components/AIPlanner';
 import { SprintsView } from './components/SprintsView';
+import { SharedBoardView } from './components/SharedBoardView';
 import type { Sprint, Task, TaskInput, TaskStatus } from './types';
 import {
     createTask as apiCreateTask,
@@ -21,7 +22,25 @@ import {
 import { consumeGoogleRedirect } from './api/googleAuth';
 import { useToast } from './context/ToastContext';
 
+/**
+ * Reads a share token from the URL. The app has no router, so the public view
+ * is selected from the location before any authenticated state is considered —
+ * a recipient has no account and must never meet the sign-in wall.
+ *
+ * Both /s/<token> and /?s=<token> are accepted: the pretty path needs the host
+ * to rewrite unknown paths to index.html, and the query form keeps working on
+ * a static host that does not.
+ */
+const readShareToken = (): string | null => {
+    const path = window.location.pathname.match(/^\/s\/([^/]+)\/?$/);
+    if (path) return decodeURIComponent(path[1]);
+
+    return new URLSearchParams(window.location.search).get('s');
+};
+
 export const App: React.FC = () => {
+    const [shareToken] = useState(readShareToken);
+
     const [tasks, setTasks] = useState<Task[]>([]);
     const [sprints, setSprints] = useState<Sprint[]>([]);
     const [loading, setLoading] = useState(false);
@@ -145,6 +164,10 @@ export const App: React.FC = () => {
         setView('board');
         showToast('Logged out successfully', 'info');
     };
+
+    if (shareToken) {
+        return <SharedBoardView token={shareToken} />;
+    }
 
     return (
         <div className="min-h-screen bg-bg text-text-h antialiased transition-colors selection:bg-accent selection:text-bg">

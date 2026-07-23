@@ -81,6 +81,7 @@ func main() {
 	planningRepo := repository.NewPlanningPostgres(db)
 	summaryRepo := repository.NewSummaryPostgres(db)
 	exportRepo := repository.NewExportPostgres(db)
+	shareRepo := repository.NewSharePostgres(db)
 
 	// A nil interface (not a typed nil) is what disables the AI features.
 	var geminiClient gemini.Client
@@ -102,6 +103,7 @@ func main() {
 	sprintService := service.NewSprintService(sprintRepo, taskRepo, zapLogger)
 	aiService := service.NewAIService(geminiClient, planningRepo, summaryRepo, sprintRepo, analyticsService, taskService, zapLogger)
 	exportService := service.NewExportService(exportRepo, analyticsService, taskService, sprintService, cfg.Export, zapLogger)
+	shareService := service.NewShareService(shareRepo, taskService, analyticsService, userRepo, zapLogger)
 	emailService, err := service.NewEmailService(mailer, zapLogger)
 	if err != nil {
 		zapLogger.Fatal("failed to initialize email service", zap.Error(err))
@@ -118,6 +120,7 @@ func main() {
 		AI:        handler.NewAIHandler(aiService, analyticsService, authService),
 		Sprint:    handler.NewSprintHandler(sprintService),
 		Export:    handler.NewExportHandler(exportService, analyticsService, authService),
+		Share:     handler.NewShareHandler(shareService, analyticsService),
 	})
 
 	// AI generation is the longest thing this server does: a Gemini call can take

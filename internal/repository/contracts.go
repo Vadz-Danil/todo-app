@@ -82,6 +82,15 @@ type SummaryRepository interface {
 	ListSummaries(ctx context.Context, userID uuid.UUID, limit int) ([]models.AISummary, error)
 }
 
+type ShareRepository interface {
+	CreateLink(ctx context.Context, link *models.ShareLink) error
+	GetByTokenHash(ctx context.Context, tokenHash string) (*models.ShareLink, error)
+	ListLinks(ctx context.Context, userID uuid.UUID) ([]models.ShareLink, error)
+	RevokeLink(ctx context.Context, userID, linkID uuid.UUID, at time.Time) error
+	DeleteLink(ctx context.Context, userID, linkID uuid.UUID) error
+	TouchLink(ctx context.Context, linkID uuid.UUID, at time.Time) error
+}
+
 type ExportRepository interface {
 	CreateTarget(ctx context.Context, target *models.ExportTarget) error
 	GetTarget(ctx context.Context, userID, targetID uuid.UUID) (*models.ExportTarget, error)

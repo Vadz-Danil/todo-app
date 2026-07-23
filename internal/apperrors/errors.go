@@ -35,6 +35,12 @@ var (
 	ErrAIUnavailable = errors.New("AI provider is temporarily unavailable")
 	ErrAIBadResponse = errors.New("AI provider returned an unusable response")
 
+	ErrShareLinkNotFound = errors.New("share link not found, revoked or expired")
+	ErrInvalidShareKind  = errors.New("invalid share kind")
+	ErrShareLabelTooLong = errors.New("share label is too long")
+	ErrInvalidShareTTL   = errors.New("share link lifetime must be between 1 and 365 days")
+	ErrTooManyShareLinks = errors.New("too many active share links; revoke one first")
+
 	ErrExportTargetNotFound = errors.New("export target not found or permission denied")
 	ErrInvalidExportURL     = errors.New("export URL must be an absolute http(s) URL")
 	ErrBlockedExportURL     = errors.New("export URL resolves to a private network address, which is not allowed")

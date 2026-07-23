@@ -21,6 +21,7 @@ type Handlers struct {
 	AI        *handler.AIHandler
 	Sprint    *handler.SprintHandler
 	Export    *handler.ExportHandler
+	Share     *handler.ShareHandler
 }
 
 func SetupRoutes(r *gin.Engine, tokenManager *jwt.TokenManager, h Handlers) {
@@ -36,6 +37,9 @@ func SetupRoutes(r *gin.Engine, tokenManager *jwt.TokenManager, h Handlers) {
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+
+	// Public, unauthenticated: the token in the path is the credential.
+	r.GET("/public/share/:token", h.Share.Resolve)
 
 	authGroup := r.Group("/auth")
 	{
@@ -60,6 +64,14 @@ func SetupRoutes(r *gin.Engine, tokenManager *jwt.TokenManager, h Handlers) {
 			tasks.DELETE("/:id", h.Task.DeleteTask)
 			tasks.PATCH("/:id/status", h.Task.UpdateTaskStatus)
 			tasks.PATCH("/:id/move", h.Task.MoveTask)
+		}
+
+		shares := apiGroup.Group("/share-links")
+		{
+			shares.GET("", h.Share.ListLinks)
+			shares.POST("", h.Share.CreateLink)
+			shares.POST("/:id/revoke", h.Share.RevokeLink)
+			shares.DELETE("/:id", h.Share.DeleteLink)
 		}
 
 		analytics := apiGroup.Group("/analytics")

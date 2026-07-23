@@ -434,3 +434,57 @@ export interface ExportDelivery {
     error?: string;
     created_at: string;
 }
+
+export type ShareKind = 'BOARD' | 'DASHBOARD' | 'BOTH';
+
+export const SHARE_KIND_LABELS: Record<ShareKind, string> = {
+    BOARD: 'Board only',
+    DASHBOARD: 'Dashboard only',
+    BOTH: 'Board + dashboard',
+};
+
+export interface ShareLink {
+    id: string;
+    /** Present only in the response that created the link, never again. */
+    token?: string;
+    kind: ShareKind;
+    label: string;
+    expires_at?: string;
+    revoked_at?: string;
+    view_count: number;
+    last_viewed_at?: string;
+    created_at: string;
+}
+
+/** The public projection of a task: no owner identifiers. */
+export interface SharedTask {
+    id: string;
+    title: string;
+    description?: string;
+    status: TaskStatus;
+    priority: TaskPriority;
+    reviewer?: string;
+    estimate_hours?: number;
+    buffer_hours?: number;
+    spent_hours?: number;
+    blockers?: string;
+    due_date?: string;
+    completed_at?: string;
+    created_at: string;
+}
+
+export interface SharedBoardColumn {
+    status: TaskStatus;
+    tasks: SharedTask[];
+}
+
+export interface SharedView {
+    kind: ShareKind;
+    label: string;
+    owner_email: string;
+    generated_at: string;
+    expires_at?: string;
+    columns?: SharedBoardColumn[];
+    task_count: number;
+    analytics?: Dashboard;
+}

@@ -108,6 +108,14 @@ type PushRequest struct {
 	Summary  *models.AISummary
 }
 
+type Share interface {
+	CreateLink(ctx context.Context, userID uuid.UUID, in ShareLinkInput) (*models.ShareLink, error)
+	ListLinks(ctx context.Context, userID uuid.UUID) ([]models.ShareLink, error)
+	RevokeLink(ctx context.Context, userID, linkID uuid.UUID) error
+	DeleteLink(ctx context.Context, userID, linkID uuid.UUID) error
+	Resolve(ctx context.Context, token string, q models.AnalyticsQuery) (*models.SharedView, error)
+}
+
 type Export interface {
 	BuildEnvelope(ctx context.Context, user *models.User, kind models.ExportKind, q models.AnalyticsQuery, summary *models.AISummary) (*models.ExportEnvelope, error)
 	Push(ctx context.Context, user *models.User, req PushRequest) (*models.ExportDelivery, error)

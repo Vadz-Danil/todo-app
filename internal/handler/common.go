@@ -97,6 +97,7 @@ func respondServiceError(c *gin.Context, err error, fallbackMessage string) bool
 		errors.Is(err, apperrors.ErrSprintNotFound),
 		errors.Is(err, apperrors.ErrSessionNotFound),
 		errors.Is(err, apperrors.ErrExportTargetNotFound),
+		errors.Is(err, apperrors.ErrShareLinkNotFound),
 		errors.Is(err, apperrors.ErrUserNotFound):
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 
@@ -117,6 +118,10 @@ func respondServiceError(c *gin.Context, err error, fallbackMessage string) bool
 		errors.Is(err, apperrors.ErrInvalidExportURL),
 		errors.Is(err, apperrors.ErrBlockedExportURL),
 		errors.Is(err, apperrors.ErrInvalidExportKind),
+		errors.Is(err, apperrors.ErrInvalidShareKind),
+		errors.Is(err, apperrors.ErrShareLabelTooLong),
+		errors.Is(err, apperrors.ErrInvalidShareTTL),
+		errors.Is(err, apperrors.ErrTooManyShareLinks),
 		errors.Is(err, apperrors.ErrEmptyRecipient):
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 

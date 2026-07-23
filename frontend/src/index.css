@@ -177,32 +177,38 @@ body {
   margin: 0;
 }
 
-h1,
-h2 {
-  font-family: var(--heading), sans-serif;
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -0.03em;
-  margin: 32px 0;
-
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+/* Element defaults belong in the base layer. Written unlayered they would sit
+   after every Tailwind layer and silently beat utilities, so a heading marked
+   `text-sm` still rendered at 24px. In @layer base they remain the default and
+   any utility on the element wins, which is what the markup expects. */
+@layer base {
+  h1,
+  h2 {
+    font-family: var(--heading), sans-serif;
+    font-weight: 500;
+    color: var(--text-h);
   }
-}
 
-h2 {
-  font-size: 24px;
-  line-height: 1.18;
-  letter-spacing: -0.01em;
-  margin: 0 0 8px;
+  h1 {
+    font-size: 56px;
+    letter-spacing: -0.03em;
+    margin: 32px 0;
 
-  @media (max-width: 1024px) {
-    font-size: 20px;
+    @media (max-width: 1024px) {
+      font-size: 36px;
+      margin: 20px 0;
+    }
+  }
+
+  h2 {
+    font-size: 24px;
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+
+    @media (max-width: 1024px) {
+      font-size: 20px;
+    }
   }
 }
 
