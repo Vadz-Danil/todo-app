@@ -91,7 +91,7 @@ export const App: React.FC = () => {
   const doneCount = safeTasks.filter((t) => t.status === 'DONE').length;
 
   return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 antialiased selection:bg-emerald-500 selection:text-black">
+      <div className="min-h-screen bg-bg text-text-h transition-colors antialiased selection:bg-accent selection:text-bg">
         <Header
             isAuthenticated={isAuthenticated}
             onOpenShare={() => setIsShareOpen(true)}
@@ -102,28 +102,28 @@ export const App: React.FC = () => {
         <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-10">
           {isAuthenticated && (
               <div className="mb-8 grid grid-cols-3 gap-2 sm:gap-4">
-                <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3 sm:p-4 backdrop-blur-sm">
-                  <div className="flex items-center gap-2 text-zinc-400 text-xs font-mono uppercase tracking-wider">
-                    <Layers className="h-3.5 w-3.5 text-sky-400" />
+                <div className="rounded-2xl border border-border bg-surface p-3 sm:p-4 shadow-(--shadow) backdrop-blur-sm">
+                  <div className="flex items-center gap-2 text-text text-xs font-mono uppercase tracking-wider">
+                    <Layers className="h-3.5 w-3.5 text-info" />
                     <span className="hidden sm:inline">Total</span>
                   </div>
-                  <p className="mt-1 text-xl sm:text-2xl font-mono font-bold text-zinc-100">{safeTasks.length}</p>
+                  <p className="mt-1 text-xl sm:text-2xl font-mono font-bold text-text-h">{safeTasks.length}</p>
                 </div>
 
-                <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3 sm:p-4 backdrop-blur-sm">
-                  <div className="flex items-center gap-2 text-zinc-400 text-xs font-mono uppercase tracking-wider">
-                    <Flame className="h-3.5 w-3.5 text-amber-400" />
+                <div className="rounded-2xl border border-border bg-surface p-3 sm:p-4 shadow-(--shadow) backdrop-blur-sm">
+                  <div className="flex items-center gap-2 text-text text-xs font-mono uppercase tracking-wider">
+                    <Flame className="h-3.5 w-3.5 text-warning" />
                     <span className="hidden sm:inline">In Progress</span>
                   </div>
-                  <p className="mt-1 text-xl sm:text-2xl font-mono font-bold text-amber-400">{inProgressCount + todoCount}</p>
+                  <p className="mt-1 text-xl sm:text-2xl font-mono font-bold text-warning">{inProgressCount}</p>
                 </div>
 
-                <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3 sm:p-4 backdrop-blur-sm">
-                  <div className="flex items-center gap-2 text-zinc-400 text-xs font-mono uppercase tracking-wider">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                <div className="rounded-2xl border border-border bg-surface p-3 sm:p-4 shadow-(--shadow) backdrop-blur-sm">
+                  <div className="flex items-center gap-2 text-text text-xs font-mono uppercase tracking-wider">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-success" />
                     <span className="hidden sm:inline">Completed</span>
                   </div>
-                  <p className="mt-1 text-xl sm:text-2xl font-mono font-bold text-emerald-400">{doneCount}</p>
+                  <p className="mt-1 text-xl sm:text-2xl font-mono font-bold text-success">{doneCount}</p>
                 </div>
               </div>
           )}
@@ -132,7 +132,7 @@ export const App: React.FC = () => {
             <TaskCreate onCreate={handleCreateTask} />
           </div>
 
-          <div className="mb-6 flex items-center justify-between border-b border-zinc-800/80 pb-3">
+          <div className="mb-6 flex items-center justify-between border-b border-border pb-3">
             <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
               {(
                   [
@@ -147,12 +147,12 @@ export const App: React.FC = () => {
                       onClick={() => setFilter(tab.id as any)}
                       className={`whitespace-nowrap rounded-xl px-3.5 py-1.5 text-xs font-medium transition-all ${
                           filter === tab.id
-                              ? 'bg-zinc-100 text-zinc-950 shadow-lg shadow-zinc-100/10'
-                              : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                              ? 'bg-text-h text-bg shadow-md'
+                              : 'text-text hover:bg-hover hover:text-text-h'
                       }`}
                   >
                     {tab.label}
-                    <span className={`ml-1.5 text-[10px] font-mono ${filter === tab.id ? 'text-zinc-600' : 'text-zinc-500'}`}>
+                    <span className={`ml-1.5 text-[10px] font-mono ${filter === tab.id ? 'text-bg/50' : 'text-text'}`}>
                   {tab.count}
                 </span>
                   </button>
@@ -161,26 +161,26 @@ export const App: React.FC = () => {
           </div>
 
           {!isAuthenticated ? (
-              <div className="mt-12 flex flex-col items-center justify-center rounded-3xl border border-zinc-800/80 bg-zinc-900/30 p-8 sm:p-16 text-center backdrop-blur-md">
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-emerald-400 mb-4 shadow-xl">
+              <div className="mt-12 flex flex-col items-center justify-center rounded-3xl border border-border bg-surface/60 p-8 sm:p-16 text-center shadow-(--shadow) backdrop-blur-md">
+                <div className="rounded-2xl border border-border bg-code-bg p-4 text-success mb-4 shadow-xl">
                   <Lock className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-bold text-zinc-100 tracking-tight">Workspace Locked</h3>
-                <p className="mt-2 text-xs sm:text-sm text-zinc-400 max-w-md leading-relaxed">
+                <h3 className="text-xl font-bold text-text-h tracking-tight">Workspace Locked</h3>
+                <p className="mt-2 text-xs sm:text-sm text-text max-w-md leading-relaxed">
                   Sign in to access your personal task manager.
                 </p>
                 <button
                     onClick={() => setIsAuthOpen(true)}
-                    className="mt-6 rounded-xl bg-emerald-500 px-6 py-2.5 text-xs font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition active:scale-95"
+                    className="mt-6 rounded-xl bg-success px-6 py-2.5 text-xs font-bold text-bg shadow-lg shadow-success/20 hover:bg-success/90 transition active:scale-95"
                 >
                   Sign In
                 </button>
               </div>
           ) : filteredTasks.length === 0 ? (
-              <div className="mt-12 flex flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-800/80 p-12 text-center">
-                <Sparkles className="h-8 w-8 text-zinc-600 mb-3" />
-                <p className="text-sm font-medium text-zinc-400">No tasks found</p>
-                <p className="text-xs text-zinc-600 mt-1">Add a new task above to get started</p>
+              <div className="mt-12 flex flex-col items-center justify-center rounded-3xl border border-dashed border-border p-12 text-center">
+                <Sparkles className="h-8 w-8 text-text/60 mb-3" />
+                <p className="text-sm font-medium text-text">No tasks found</p>
+                <p className="text-xs text-text/60 mt-1">Add a new task above to get started</p>
               </div>
           ) : (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
