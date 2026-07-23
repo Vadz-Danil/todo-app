@@ -24,9 +24,9 @@ type Handlers struct {
 	Share     *handler.ShareHandler
 }
 
-func SetupRoutes(r *gin.Engine, tokenManager *jwt.TokenManager, h Handlers) {
+func SetupRoutes(r *gin.Engine, tokenManager *jwt.TokenManager, h Handlers, allowedOrigins []string) {
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:3000", "https://harmonious-prosperity-production-b588.up.railway.app"},
+		AllowOrigins:     allowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length", "Content-Disposition"},

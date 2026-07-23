@@ -121,7 +121,8 @@ func main() {
 		Sprint:    handler.NewSprintHandler(sprintService),
 		Export:    handler.NewExportHandler(exportService, analyticsService, authService),
 		Share:     handler.NewShareHandler(shareService, analyticsService),
-	})
+	}, cfg.CORSOrigins)
+	zapLogger.Info("CORS origins allowed", zap.Strings("origins", cfg.CORSOrigins))
 
 	// AI generation is the longest thing this server does: a Gemini call can take
 	// GEMINI_TIMEOUT (90s by default) and is retried, so a 10s write timeout would

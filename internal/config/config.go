@@ -16,6 +16,8 @@ type Config struct {
 	Port        string
 	DatabaseURL string
 	FrontendURL string
+	// CORSOrigins are the browser origins allowed to call this API.
+	CORSOrigins []string
 	JWT         JWTConfig
 	Google      GoogleConfig
 	Email       EmailConfig
@@ -165,6 +167,19 @@ func LoadConfig(logger *zap.Logger) *Config {
 		getCSV("GOOGLE_ALLOWED_REDIRECT_URLS")...,
 	)
 
+	// The API is called from the browser, so the deployed front end's origin has
+	// to be allowed. Deriving it from FRONTEND_URL keeps a domain change to a
+	// variable edit instead of a code change; the localhost entries keep `npm
+	// run dev` working against a deployed API.
+	corsOrigins := appendUnique(
+		[]string{
+			strings.TrimRight(frontendURL, "/"),
+			"http://localhost:5173",
+			"http://localhost:3000",
+		},
+		getCSV("CORS_ALLOWED_ORIGINS")...,
+	)
+
 	emailCfg := loadEmailConfig(logger)
 	if err := emailCfg.Validate(); err != nil {
 		logger.Fatal("invalid email configuration", zap.Error(err))
@@ -175,6 +190,7 @@ func LoadConfig(logger *zap.Logger) *Config {
 		Port:        mustGetEnv("PORT", logger),
 		DatabaseURL: mustGetEnv("DATABASE_URL", logger),
 		FrontendURL: frontendURL,
+		CORSOrigins: corsOrigins,
 		JWT: JWTConfig{
 			Secret:          mustGetEnv("JWT_SECRET", logger),
 			AccessTokenTTL:  accessTTL,
