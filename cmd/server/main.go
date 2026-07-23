@@ -164,10 +164,30 @@ func main() {
 // newMailSender picks the outbound mail transport. Config.Validate has already
 // checked that the selected provider has what it needs.
 func newMailSender(cfg config.EmailConfig) email.Sender {
-	if cfg.Provider == config.EmailProviderBrevo {
+	switch cfg.Provider {
+	case config.EmailProviderBrevo:
 		return email.NewBrevoSender(email.BrevoConfig{
 			APIKey:   cfg.BrevoAPIKey,
 			BaseURL:  cfg.BrevoBaseURL,
+			From:     cfg.From,
+			FromName: cfg.FromName,
+			Timeout:  cfg.Timeout,
+		})
+
+	case config.EmailProviderMailjet:
+		return email.NewMailjetSender(email.MailjetConfig{
+			APIKey:    cfg.MailjetAPIKey,
+			SecretKey: cfg.MailjetSecretKey,
+			BaseURL:   cfg.MailjetBaseURL,
+			From:      cfg.From,
+			FromName:  cfg.FromName,
+			Timeout:   cfg.Timeout,
+		})
+
+	case config.EmailProviderSMTP2GO:
+		return email.NewSMTP2GOSender(email.SMTP2GOConfig{
+			APIKey:   cfg.SMTP2GOAPIKey,
+			BaseURL:  cfg.SMTP2GOBaseURL,
 			From:     cfg.From,
 			FromName: cfg.FromName,
 			Timeout:  cfg.Timeout,

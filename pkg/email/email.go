@@ -9,6 +9,7 @@ package email
 import (
 	"context"
 	"fmt"
+	"net/mail"
 	"strings"
 )
 
@@ -40,4 +41,26 @@ type Sender interface {
 	Send(ctx context.Context, msg Message) error
 	// Name identifies the transport in logs and health output.
 	Name() string
+}
+
+// formatAddress renders `Name <addr>` when a display name is configured, and
+// the bare address otherwise. Quoting and any needed encoding come from
+// net/mail rather than string concatenation.
+func formatAddress(addr, name string) string {
+	if strings.TrimSpace(name) == "" {
+		return addr
+	}
+	return (&mail.Address{Name: name, Address: addr}).String()
+}
+
+// truncateBody keeps an upstream error body short enough to log.
+func truncateBody(body []byte) string {
+	trimmed := strings.TrimSpace(string(body))
+	if trimmed == "" {
+		return "no response body"
+	}
+	if len(trimmed) > 512 {
+		return trimmed[:512] + "…"
+	}
+	return trimmed
 }

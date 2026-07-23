@@ -43,8 +43,10 @@ type GoogleConfig struct {
 type EmailProvider string
 
 const (
-	EmailProviderSMTP  EmailProvider = "smtp"
-	EmailProviderBrevo EmailProvider = "brevo"
+	EmailProviderSMTP    EmailProvider = "smtp"
+	EmailProviderBrevo   EmailProvider = "brevo"
+	EmailProviderMailjet EmailProvider = "mailjet"
+	EmailProviderSMTP2GO EmailProvider = "smtp2go"
 )
 
 // EmailConfig covers both transports. Which set of fields matters depends on
@@ -63,6 +65,13 @@ type EmailConfig struct {
 
 	BrevoAPIKey  string
 	BrevoBaseURL string
+
+	MailjetAPIKey    string
+	MailjetSecretKey string
+	MailjetBaseURL   string
+
+	SMTP2GOAPIKey  string
+	SMTP2GOBaseURL string
 }
 
 // Validate reports the missing variables for the selected provider only.
@@ -76,6 +85,14 @@ func (c EmailConfig) Validate() error {
 		if strings.TrimSpace(c.BrevoAPIKey) == "" {
 			return errors.New("BREVO_API_KEY is required when EMAIL_PROVIDER=brevo")
 		}
+	case EmailProviderMailjet:
+		if strings.TrimSpace(c.MailjetAPIKey) == "" || strings.TrimSpace(c.MailjetSecretKey) == "" {
+			return errors.New("MAILJET_API_KEY and MAILJET_SECRET_KEY are both required when EMAIL_PROVIDER=mailjet")
+		}
+	case EmailProviderSMTP2GO:
+		if strings.TrimSpace(c.SMTP2GOAPIKey) == "" {
+			return errors.New("SMTP2GO_API_KEY is required when EMAIL_PROVIDER=smtp2go")
+		}
 	case EmailProviderSMTP:
 		if strings.TrimSpace(c.SMTPHost) == "" {
 			return errors.New("SMTP_HOST is required when EMAIL_PROVIDER=smtp")
@@ -84,7 +101,7 @@ func (c EmailConfig) Validate() error {
 			return fmt.Errorf("SMTP_PORT must be a valid port, got %d", c.SMTPPort)
 		}
 	default:
-		return fmt.Errorf("unknown EMAIL_PROVIDER %q (expected smtp or brevo)", c.Provider)
+		return fmt.Errorf("unknown EMAIL_PROVIDER %q (expected smtp, brevo, mailjet or smtp2go)", c.Provider)
 	}
 
 	return nil
@@ -187,9 +204,16 @@ func LoadConfig(logger *zap.Logger) *Config {
 func loadEmailConfig(logger *zap.Logger) EmailConfig {
 	provider := EmailProvider(strings.ToLower(getEnv("EMAIL_PROVIDER", "")))
 	if provider == "" {
-		if strings.TrimSpace(os.Getenv("BREVO_API_KEY")) != "" {
+		// First configured HTTP provider wins; SMTP is the fallback because it
+		// needs no signup but cannot work on hosts that block its ports.
+		switch {
+		case strings.TrimSpace(os.Getenv("BREVO_API_KEY")) != "":
 			provider = EmailProviderBrevo
-		} else {
+		case strings.TrimSpace(os.Getenv("MAILJET_API_KEY")) != "":
+			provider = EmailProviderMailjet
+		case strings.TrimSpace(os.Getenv("SMTP2GO_API_KEY")) != "":
+			provider = EmailProviderSMTP2GO
+		default:
 			provider = EmailProviderSMTP
 		}
 	}
@@ -210,6 +234,13 @@ func loadEmailConfig(logger *zap.Logger) EmailConfig {
 
 		BrevoAPIKey:  strings.TrimSpace(os.Getenv("BREVO_API_KEY")),
 		BrevoBaseURL: getEnv("BREVO_BASE_URL", ""),
+
+		MailjetAPIKey:    strings.TrimSpace(os.Getenv("MAILJET_API_KEY")),
+		MailjetSecretKey: strings.TrimSpace(os.Getenv("MAILJET_SECRET_KEY")),
+		MailjetBaseURL:   getEnv("MAILJET_BASE_URL", ""),
+
+		SMTP2GOAPIKey:  strings.TrimSpace(os.Getenv("SMTP2GO_API_KEY")),
+		SMTP2GOBaseURL: getEnv("SMTP2GO_BASE_URL", ""),
 	}
 }
 

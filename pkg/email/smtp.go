@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"mime"
 	"net"
-	"net/mail"
 	"net/smtp"
 	"strconv"
 	"strings"
@@ -154,10 +153,7 @@ func buildMIME(from, fromName string, msg Message) ([]byte, error) {
 		return nil, fmt.Errorf("email: sender address is not configured")
 	}
 
-	sender := from
-	if strings.TrimSpace(fromName) != "" {
-		sender = (&mail.Address{Name: fromName, Address: from}).String()
-	}
+	sender := formatAddress(from, fromName)
 
 	// Header order is fixed rather than map-ranged so the output is stable and
 	// spam filters see a conventional layout.
