@@ -19,7 +19,7 @@ import (
 type Auth interface {
 	Register(ctx context.Context, email, password string) error
 	Login(ctx context.Context, email, password string) (string, string, error)
-	GoogleLogin(ctx context.Context, code string) (string, string, error)
+	GoogleLogin(ctx context.Context, code, redirectURI string) (string, string, error)
 	RefreshToken(refreshTokenStr string) (string, string, error)
 	GetUserByID(ctx context.Context, userID uuid.UUID) (*models.User, error)
 }
@@ -136,13 +136,18 @@ func (s *AuthService) GetUserByID(ctx context.Context, userID uuid.UUID) (*model
 	return user, nil
 }
 
-func (s *AuthService) GoogleLogin(ctx context.Context, code string) (string, string, error) {
+func (s *AuthService) GoogleLogin(ctx context.Context, code, redirectURI string) (string, string, error) {
 	if strings.TrimSpace(code) == "" {
 		return "", "", apperrors.ErrInvalidCredentials
 	}
 
-	googleUser, err := s.googleProvider.ExchangeCode(ctx, code)
+	googleUser, err := s.googleProvider.ExchangeCode(ctx, code, redirectURI)
 	if err != nil {
+		if errors.Is(err, provider.ErrRedirectURINotAllowed) {
+			s.logger.Warn("rejected google login with an unregistered redirect_uri",
+				zap.String("redirect_uri", redirectURI))
+			return "", "", apperrors.ErrInvalidRedirectURI
+		}
 		s.logger.Error("failed to exchange google code", zap.Error(err))
 		return "", "", apperrors.ErrInvalidCredentials
 	}

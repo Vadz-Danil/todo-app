@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Lock, Mail, ArrowRight } from 'lucide-react';
-import { useGoogleLogin } from '@react-oauth/google';
 import { api } from '../api/client';
+import { isGoogleConfigured, startGoogleLogin } from '../api/googleAuth';
 import { useToast } from '../context/ToastContext';
 
 interface AuthModalProps {
@@ -17,30 +17,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
     const [loading, setLoading] = useState(false);
     const { showToast } = useToast();
 
-    const handleGoogleLogin = useGoogleLogin({
-        flow: 'auth-code',
-        onSuccess: async (codeResponse) => {
-            setLoading(true);
-            try {
-                const { data } = await api.post('/auth/google', {
-                    code: codeResponse.code,
-                });
-
-                localStorage.setItem('access_token', data.access_token);
-                localStorage.setItem('refresh_token', data.refresh_token);
-                showToast('Successfully authenticated with Google', 'success');
-                onSuccess();
-                onClose();
-            } catch (err: any) {
-                showToast(err.response?.data?.error || 'Google authentication failed', 'error');
-            } finally {
-                setLoading(false);
-            }
-        },
-        onError: () => {
-            showToast('Failed to authenticate with Google', 'error');
-        },
-    });
+    const handleGoogleLogin = () => {
+        try {
+            // Leaves the page; the callback is picked up on the next load.
+            startGoogleLogin();
+        } catch {
+            showToast('Google sign-in is not configured', 'error');
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -93,10 +77,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                     </button>
                 </div>
 
+                {isGoogleConfigured() && (
                 <button
                     type="button"
                     disabled={loading}
-                    onClick={() => handleGoogleLogin()}
+                    onClick={handleGoogleLogin}
                     className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/60 py-2.5 text-xs font-semibold text-zinc-200 hover:bg-zinc-800 hover:border-zinc-700 transition disabled:opacity-50"
                 >
                     <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -107,6 +92,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                     </svg>
                     <span>Continue with Google</span>
                 </button>
+                )}
 
                 <div className="my-5 flex items-center gap-3 text-[10px] font-mono text-zinc-600 uppercase tracking-wider">
                     <div className="h-px flex-1 bg-zinc-800" />

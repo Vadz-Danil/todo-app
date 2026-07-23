@@ -32,8 +32,8 @@ func (m *MockAuthService) Login(ctx context.Context, email, password string) (st
 	return args.String(0), args.String(1), args.Error(2)
 }
 
-func (m *MockAuthService) GoogleLogin(ctx context.Context, code string) (string, string, error) {
-	args := m.Called(ctx, code)
+func (m *MockAuthService) GoogleLogin(ctx context.Context, code, redirectURI string) (string, string, error) {
+	args := m.Called(ctx, code, redirectURI)
 	return args.String(0), args.String(1), args.Error(2)
 }
 

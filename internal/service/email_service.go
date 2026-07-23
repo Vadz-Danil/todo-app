@@ -22,7 +22,7 @@ type Email interface {
 var templateFS embed.FS
 
 type EmailService struct {
-	mailer *email.Mailer
+	sender email.Sender
 	logger *zap.Logger
 	tmpl   *template.Template
 }
@@ -33,14 +33,14 @@ type ShareTasksEmailData struct {
 	AppName      string
 }
 
-func NewEmailService(mailer *email.Mailer, logger *zap.Logger) (*EmailService, error) {
+func NewEmailService(sender email.Sender, logger *zap.Logger) (*EmailService, error) {
 	tmpl, err := template.ParseFS(templateFS, "templates/share_dashboard.html")
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse email template: %w", err)
 	}
 
 	return &EmailService{
-		mailer: mailer,
+		sender: sender,
 		logger: logger,
 		tmpl:   tmpl,
 	}, nil
@@ -74,14 +74,20 @@ func (s *EmailService) ShareTasks(ctx context.Context, recipientEmail, senderEma
 
 	subject := fmt.Sprintf("✓ TodoApp: %s поширив(-ла) вам свій список задач", senderEmail)
 
-	if err := s.mailer.SendHTMLEmail(recipientEmail, subject, bodyBuffer.String()); err != nil {
-		s.logger.Error("failed to send dashboard link email", zap.Error(err), zap.String("to", recipientEmail))
+	msg := email.Message{To: recipientEmail, Subject: subject, HTMLBody: bodyBuffer.String()}
+	if err := s.sender.Send(ctx, msg); err != nil {
+		s.logger.Error("failed to send dashboard link email",
+			zap.Error(err),
+			zap.String("to", recipientEmail),
+			zap.String("transport", s.sender.Name()),
+		)
 		return err
 	}
 
 	s.logger.Info("share tasks email sent successfully",
 		zap.String("to", recipientEmail),
 		zap.String("from", senderEmail),
+		zap.String("transport", s.sender.Name()),
 	)
 
 	return nil

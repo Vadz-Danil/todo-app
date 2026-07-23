@@ -74,8 +74,12 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := h.authService.GoogleLogin(c.Request.Context(), req.Code)
+	accessToken, refreshToken, err := h.authService.GoogleLogin(c.Request.Context(), req.Code, req.RedirectURI)
 	if err != nil {
+		if errors.Is(err, apperrors.ErrInvalidRedirectURI) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		if errors.Is(err, apperrors.ErrInvalidCredentials) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
@@ -87,6 +91,26 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
+	})
+}
+
+// Me returns the authenticated user's own profile, so the UI can show who is
+// signed in without decoding the JWT itself.
+func (h *AuthHandler) Me(c *gin.Context) {
+	userID, ok := getUserIDFromContext(c)
+	if !ok {
+		return
+	}
+
+	user, err := h.authService.GetUserByID(c.Request.Context(), userID)
+	if respondServiceError(c, err, "Failed to load profile") {
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":         user.ID,
+		"email":      user.Email,
+		"created_at": user.CreatedAt,
 	})
 }
 
