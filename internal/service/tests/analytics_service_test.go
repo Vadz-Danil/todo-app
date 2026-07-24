@@ -45,8 +45,8 @@ func (m *anMockRepo) GlobalCounts(ctx context.Context, userID uuid.UUID) (int, m
 	return args.Int(0), counts, args.Error(2)
 }
 
-func (m *anMockRepo) CompletionDays(ctx context.Context, userID uuid.UUID, tz string) ([]models.DayCount, error) {
-	args := m.Called(ctx, userID, tz)
+func (m *anMockRepo) CompletionDays(ctx context.Context, userID uuid.UUID, loc *time.Location) ([]models.DayCount, error) {
+	args := m.Called(ctx, userID, loc)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -243,7 +243,7 @@ func anStdRepo(t *testing.T, q models.AnalyticsQuery, now time.Time) *anMockRepo
 	repo := new(anMockRepo)
 	anExpectWindows(repo, q, anTasks(now), nil)
 	repo.On("GlobalCounts", mock.Anything, anUserID).Return(12, anGlobalCounts(), nil)
-	repo.On("CompletionDays", mock.Anything, anUserID, "UTC").Return(nil, nil)
+	repo.On("CompletionDays", mock.Anything, anUserID, mock.Anything).Return(nil, nil)
 	repo.On("SprintSummaries", mock.Anything, anUserID, q.From, q.To).Return(nil, nil)
 	return repo
 }
@@ -578,7 +578,7 @@ func TestAnalyticsService_Dashboard_CompletionRateEdges(t *testing.T) {
 			repo := new(anMockRepo)
 			anExpectWindows(repo, q, tc.tasks, nil)
 			repo.On("GlobalCounts", mock.Anything, anUserID).Return(0, map[models.TaskStatus]int{}, nil)
-			repo.On("CompletionDays", mock.Anything, anUserID, "UTC").Return(nil, nil)
+			repo.On("CompletionDays", mock.Anything, anUserID, time.UTC).Return(nil, nil)
 			repo.On("SprintSummaries", mock.Anything, anUserID, q.From, q.To).Return(nil, nil)
 
 			dash, err := anService(repo).Dashboard(context.Background(), anUserID, q)
@@ -835,7 +835,7 @@ func TestAnalyticsService_Dashboard_Comparison(t *testing.T) {
 		repo := new(anMockRepo)
 		prevFrom, prevTo := anExpectWindows(repo, q, anTasks(now), nil)
 		repo.On("GlobalCounts", mock.Anything, anUserID).Return(12, anGlobalCounts(), nil)
-		repo.On("CompletionDays", mock.Anything, anUserID, "UTC").Return(nil, nil)
+		repo.On("CompletionDays", mock.Anything, anUserID, time.UTC).Return(nil, nil)
 		repo.On("SprintSummaries", mock.Anything, anUserID, q.From, q.To).Return(nil, nil)
 
 		dash, err := anService(repo).Dashboard(context.Background(), anUserID, q)
@@ -880,7 +880,7 @@ func TestAnalyticsService_Dashboard_Comparison(t *testing.T) {
 		repo := new(anMockRepo)
 		anExpectWindows(repo, q, current, previous)
 		repo.On("GlobalCounts", mock.Anything, anUserID).Return(3, map[models.TaskStatus]int{models.StatusTodo: 3}, nil)
-		repo.On("CompletionDays", mock.Anything, anUserID, "UTC").Return(nil, nil)
+		repo.On("CompletionDays", mock.Anything, anUserID, time.UTC).Return(nil, nil)
 		repo.On("SprintSummaries", mock.Anything, anUserID, q.From, q.To).Return(nil, nil)
 
 		dash, err := anService(repo).Dashboard(context.Background(), anUserID, q)
@@ -960,7 +960,7 @@ func TestAnalyticsService_Dashboard_Streaks(t *testing.T) {
 			repo := new(anMockRepo)
 			anExpectWindows(repo, q, nil, nil)
 			repo.On("GlobalCounts", mock.Anything, anUserID).Return(0, map[models.TaskStatus]int{}, nil)
-			repo.On("CompletionDays", mock.Anything, anUserID, "UTC").Return(tc.days, nil)
+			repo.On("CompletionDays", mock.Anything, anUserID, time.UTC).Return(tc.days, nil)
 			repo.On("SprintSummaries", mock.Anything, anUserID, q.From, q.To).Return(nil, nil)
 
 			dash, err := anService(repo).Dashboard(context.Background(), anUserID, q)
@@ -986,7 +986,7 @@ func TestAnalyticsService_Dashboard_EmptyUser(t *testing.T) {
 	repo.On("FirstTaskAt", mock.Anything, anUserID).Return(nil, nil).Once()
 	repo.On("LoadWindow", mock.Anything, anUserID, mock.Anything, mock.Anything).Return(nil, nil)
 	repo.On("GlobalCounts", mock.Anything, anUserID).Return(0, nil, nil)
-	repo.On("CompletionDays", mock.Anything, anUserID, "UTC").Return(nil, nil)
+	repo.On("CompletionDays", mock.Anything, anUserID, time.UTC).Return(nil, nil)
 	repo.On("SprintSummaries", mock.Anything, anUserID, mock.Anything, mock.Anything).Return(nil, nil)
 
 	dash, err := anService(repo).Dashboard(context.Background(), anUserID, q)
@@ -1067,7 +1067,7 @@ func TestAnalyticsService_Dashboard_SprintProgress(t *testing.T) {
 	repo := new(anMockRepo)
 	anExpectWindows(repo, q, anTasks(now), nil)
 	repo.On("GlobalCounts", mock.Anything, anUserID).Return(12, anGlobalCounts(), nil)
-	repo.On("CompletionDays", mock.Anything, anUserID, "UTC").Return(nil, nil)
+	repo.On("CompletionDays", mock.Anything, anUserID, time.UTC).Return(nil, nil)
 	repo.On("SprintSummaries", mock.Anything, anUserID, q.From, q.To).Return(sprints, nil)
 
 	dash, err := anService(repo).Dashboard(context.Background(), anUserID, q)
@@ -1102,7 +1102,7 @@ func TestAnalyticsService_Dashboard_RepositoryErrors(t *testing.T) {
 			setup: func(repo *anMockRepo, q models.AnalyticsQuery) {
 				repo.On("LoadWindow", mock.Anything, anUserID, q.From, q.To).Return(nil, nil).Once()
 				repo.On("GlobalCounts", mock.Anything, anUserID).Return(0, nil, nil).Once()
-				repo.On("CompletionDays", mock.Anything, anUserID, "UTC").Return(nil, failure).Once()
+				repo.On("CompletionDays", mock.Anything, anUserID, time.UTC).Return(nil, failure).Once()
 			},
 		},
 		{
@@ -1110,7 +1110,7 @@ func TestAnalyticsService_Dashboard_RepositoryErrors(t *testing.T) {
 			setup: func(repo *anMockRepo, q models.AnalyticsQuery) {
 				repo.On("LoadWindow", mock.Anything, anUserID, q.From, q.To).Return(nil, nil).Once()
 				repo.On("GlobalCounts", mock.Anything, anUserID).Return(0, nil, nil).Once()
-				repo.On("CompletionDays", mock.Anything, anUserID, "UTC").Return(nil, nil).Once()
+				repo.On("CompletionDays", mock.Anything, anUserID, time.UTC).Return(nil, nil).Once()
 				repo.On("SprintSummaries", mock.Anything, anUserID, q.From, q.To).Return(nil, failure).Once()
 			},
 		},

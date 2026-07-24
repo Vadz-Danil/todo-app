@@ -10,6 +10,11 @@ import (
 	"syscall"
 	"time"
 
+	// Embed the IANA timezone database. Without it time.LoadLocation depends on
+	// the container shipping /usr/share/zoneinfo, so a slimmer base image would
+	// start rejecting every viewer's timezone. Costs ~450KB in the binary.
+	_ "time/tzdata"
+
 	"todo-app/internal/config"
 	"todo-app/internal/handler"
 	"todo-app/internal/provider"

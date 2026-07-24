@@ -140,7 +140,7 @@ func (s *AnalyticsService) Dashboard(ctx context.Context, userID uuid.UUID, q mo
 		return nil, fmt.Errorf("failed to load global task counts: %w", err)
 	}
 
-	allCompletionDays, err := s.repo.CompletionDays(ctx, userID, loc.String())
+	allCompletionDays, err := s.repo.CompletionDays(ctx, userID, loc)
 	if err != nil {
 		s.logger.Error("failed to load completion days", zap.Error(err), zap.String("user_id", userID.String()))
 		return nil, fmt.Errorf("failed to load completion days: %w", err)

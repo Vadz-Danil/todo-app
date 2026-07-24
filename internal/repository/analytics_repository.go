@@ -6,12 +6,17 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"time"
 
 	"todo-app/internal/models"
 
 	"github.com/google/uuid"
 )
+
+// analyticsDayFormat is the calendar-day key shared by the heatmap and
+// streak calculations.
+const analyticsDayFormat = "2006-01-02"
 
 type AnalyticsPostgres struct {
 	db *sql.DB
@@ -88,15 +93,23 @@ func (r *AnalyticsPostgres) GlobalCounts(ctx context.Context, userID uuid.UUID) 
 	return total, counts, nil
 }
 
-func (r *AnalyticsPostgres) CompletionDays(ctx context.Context, userID uuid.UUID, tz string) (days []models.DayCount, err error) {
+// CompletionDays groups completions by the viewer's calendar day.
+//
+// The grouping deliberately happens in Go rather than via `AT TIME ZONE` in
+// SQL. Go and PostgreSQL carry separate copies of the IANA database, and they
+// disagree: a browser on an older platform still reports zones by names that
+// IANA has since renamed (Europe/Kiev, Asia/Calcutta), Go's tzdata keeps those
+// as aliases, but PostgreSQL builds that omit the "backward" links reject them
+// with 22023 and fail the whole dashboard. Passing timestamps instead of a zone
+// name removes the disagreement entirely.
+func (r *AnalyticsPostgres) CompletionDays(ctx context.Context, userID uuid.UUID, loc *time.Location) (days []models.DayCount, err error) {
 	query := `
-        SELECT to_char((completed_at AT TIME ZONE $2)::date, 'YYYY-MM-DD') AS d, COUNT(*)
+        SELECT completed_at
         FROM tasks
         WHERE user_id = $1 AND completed_at IS NOT NULL
-        GROUP BY d
-        ORDER BY d ASC
+        ORDER BY completed_at ASC
     `
-	rows, err := r.db.QueryContext(ctx, query, userID, tz)
+	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query completion days: %w", err)
 	}
@@ -107,20 +120,50 @@ func (r *AnalyticsPostgres) CompletionDays(ctx context.Context, userID uuid.UUID
 		}
 	}()
 
-	days = make([]models.DayCount, 0)
+	stamps := make([]time.Time, 0)
 	for rows.Next() {
-		var day models.DayCount
-		if err := rows.Scan(&day.Date, &day.Count); err != nil {
+		var completedAt time.Time
+		if err := rows.Scan(&completedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan completion day: %w", err)
 		}
-		days = append(days, day)
+		stamps = append(stamps, completedAt)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error during rows iteration: %w", err)
 	}
 
-	return days, nil
+	return groupCompletionsByLocalDay(stamps, loc), nil
+}
+
+// groupCompletionsByLocalDay counts timestamps per calendar day in loc,
+// ascending. A nil loc means UTC.
+func groupCompletionsByLocalDay(stamps []time.Time, loc *time.Location) []models.DayCount {
+	if loc == nil {
+		loc = time.UTC
+	}
+
+	counts := make(map[string]int, len(stamps))
+	order := make([]string, 0, len(stamps))
+	for _, stamp := range stamps {
+		day := stamp.In(loc).Format(analyticsDayFormat)
+		if _, seen := counts[day]; !seen {
+			order = append(order, day)
+		}
+		counts[day]++
+	}
+
+	// The query returns rows already ordered by completed_at, but a zone with a
+	// negative offset can pull a later timestamp into an earlier local day, so
+	// sort the keys rather than trusting arrival order.
+	slices.Sort(order)
+
+	days := make([]models.DayCount, 0, len(order))
+	for _, day := range order {
+		days = append(days, models.DayCount{Date: day, Count: counts[day]})
+	}
+
+	return days
 }
 
 func (r *AnalyticsPostgres) StatusChanges(ctx context.Context, userID uuid.UUID, from, to time.Time) (changes []models.StatusChange, err error) {

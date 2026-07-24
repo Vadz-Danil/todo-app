@@ -45,9 +45,11 @@ type AnalyticsRepository interface {
 	// GlobalCounts returns the all-time task total and the per-status snapshot.
 	GlobalCounts(ctx context.Context, userID uuid.UUID) (int, map[models.TaskStatus]int, error)
 
-	// CompletionDays returns all-time completion counts grouped by local
-	// calendar day (YYYY-MM-DD in tz), ascending, for streak calculation.
-	CompletionDays(ctx context.Context, userID uuid.UUID, tz string) ([]models.DayCount, error)
+	// CompletionDays returns all-time completion counts grouped by calendar day
+	// in loc (YYYY-MM-DD), ascending, for streak calculation. It takes a
+	// *time.Location rather than a zone name so the zone is resolved by Go's
+	// tzdata, which the database's own copy may not agree with.
+	CompletionDays(ctx context.Context, userID uuid.UUID, loc *time.Location) ([]models.DayCount, error)
 
 	StatusChanges(ctx context.Context, userID uuid.UUID, from, to time.Time) ([]models.StatusChange, error)
 
