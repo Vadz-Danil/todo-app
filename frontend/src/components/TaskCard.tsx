@@ -215,7 +215,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             )}
 
             {((progress && progress.total > 0) ||
-                task.estimate_hours != null ||
+=== / !==
                 task.buffer_hours != null ||
                 due !== null ||
                 reviewer ||
