@@ -11,6 +11,8 @@ import type {
     PlanningSession,
     ShareKind,
     ShareLink,
+    Subtask,
+    SubtaskProgress,
     SharedView,
     Sprint,
     Task,
@@ -339,3 +341,31 @@ export const fetchSharedView = async (
 /** The absolute URL to hand to someone. */
 export const shareLinkURL = (token: string): string =>
     `${window.location.origin}/s/${token}`;
+
+// --- subtasks (checklist) --------------------------------------------------
+
+export const listSubtasks = async (taskId: string): Promise<Subtask[]> => {
+    const { data } = await api.get(`/api/tasks/${taskId}/subtasks`);
+    return data?.subtasks ?? [];
+};
+
+export const createSubtask = async (taskId: string, title: string): Promise<Subtask> =>
+    (await api.post<Subtask>(`/api/tasks/${taskId}/subtasks`, { title })).data;
+
+export const updateSubtask = async (
+    subtaskId: string,
+    patch: { title?: string; done?: boolean }
+): Promise<Subtask> => (await api.patch<Subtask>(`/api/subtasks/${subtaskId}`, patch)).data;
+
+export const deleteSubtask = async (subtaskId: string): Promise<void> => {
+    await api.delete(`/api/subtasks/${subtaskId}`);
+};
+
+/** Batched done/total rollup for many tasks, keyed by task id. */
+export const subtaskProgress = async (
+    taskIds: string[]
+): Promise<Record<string, SubtaskProgress>> => {
+    if (taskIds.length === 0) return {};
+    const { data } = await api.get('/api/subtasks', { params: { task_ids: taskIds.join(',') } });
+    return data?.progress ?? {};
+};

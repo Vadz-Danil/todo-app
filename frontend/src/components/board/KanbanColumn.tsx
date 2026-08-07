@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Plus, X } from 'lucide-react';
-import type { Task, TaskInput, TaskStatus } from '../../types';
+import type { SubtaskProgress, Task, TaskInput, TaskStatus } from '../../types';
 import { STATUS_LABELS } from '../../types';
 import { STATUS_DOT, TaskCard } from '../TaskCard';
 import { TaskCreate } from '../TaskCreate';
@@ -9,6 +9,8 @@ export interface KanbanColumnProps {
     status: TaskStatus;
     /** Already sorted by `position` ascending by the board. */
     tasks: Task[];
+    /** Checklist rollups keyed by task id, loaded once by the board. */
+    progress?: Record<string, SubtaskProgress>;
     loading?: boolean;
     draggingId: string | null;
     /** Insertion index within the rendered list, or null when this is not the hovered column. */
@@ -42,6 +44,7 @@ const CardSkeleton: React.FC = () => (
 export const KanbanColumn: React.FC<KanbanColumnProps> = ({
     status,
     tasks,
+    progress,
     loading = false,
     draggingId,
     dropIndex,
@@ -160,6 +163,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
                         {showLineAt(i) && <DropLine />}
                         <TaskCard
                             task={task}
+                            progress={progress?.[task.id]}
                             draggable
                             isDragging={draggingId === task.id}
                             onDragStart={() => onCardDragStart(task)}

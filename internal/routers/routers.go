@@ -22,6 +22,7 @@ type Handlers struct {
 	Sprint    *handler.SprintHandler
 	Export    *handler.ExportHandler
 	Share     *handler.ShareHandler
+	Subtask   *handler.SubtaskHandler
 }
 
 func SetupRoutes(r *gin.Engine, tokenManager *jwt.TokenManager, h Handlers, allowedOrigins []string) {
@@ -64,6 +65,15 @@ func SetupRoutes(r *gin.Engine, tokenManager *jwt.TokenManager, h Handlers, allo
 			tasks.DELETE("/:id", h.Task.DeleteTask)
 			tasks.PATCH("/:id/status", h.Task.UpdateTaskStatus)
 			tasks.PATCH("/:id/move", h.Task.MoveTask)
+			tasks.GET("/:id/subtasks", h.Subtask.List)
+			tasks.POST("/:id/subtasks", h.Subtask.Create)
+		}
+
+		subtasks := apiGroup.Group("/subtasks")
+		{
+			subtasks.GET("", h.Subtask.Progress)
+			subtasks.PATCH("/:subtaskID", h.Subtask.Update)
+			subtasks.DELETE("/:subtaskID", h.Subtask.Delete)
 		}
 
 		shares := apiGroup.Group("/share-links")

@@ -3,11 +3,12 @@ import {
     AlertTriangle,
     CalendarDays,
     GripVertical,
+    ListChecks,
     Shield,
     Timer,
     Trash2,
 } from 'lucide-react';
-import type { Task, TaskPriority, TaskStatus } from '../types';
+import type { SubtaskProgress, Task, TaskPriority, TaskStatus } from '../types';
 import { BOARD_STATUSES, PRIORITY_LABELS, STATUS_LABELS } from '../types';
 
 /* ------------------------------ shared tokens ------------------------------ */
@@ -103,6 +104,8 @@ const Chip: React.FC<ChipProps> = ({ children, title, className, style }) => (
 
 export interface TaskCardProps {
     task: Task;
+    /** Checklist rollup, loaded in a batch by the board. Omitted = no badge. */
+    progress?: SubtaskProgress;
     onStatusChange: (task: Task, status: TaskStatus) => void;
     onOpen: (task: Task) => void;
     onDelete?: (id: string) => void;
@@ -117,6 +120,7 @@ export interface TaskCardProps {
 
 export const TaskCard: React.FC<TaskCardProps> = ({
     task,
+    progress,
     onStatusChange,
     onOpen,
     onDelete,
@@ -210,12 +214,26 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 </p>
             )}
 
-            {(task.estimate_hours != null ||
+            {((progress && progress.total > 0) ||
+=== / !==
                 task.buffer_hours != null ||
                 due !== null ||
                 reviewer ||
                 blockers) && (
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    {progress && progress.total > 0 && (
+                        <Chip
+                            title={`Checklist: ${progress.done} of ${progress.total} done`}
+                            className={
+                                progress.done === progress.total
+                                    ? 'border-success/40 bg-success/10 text-success'
+                                    : undefined
+                            }
+                        >
+                            <ListChecks aria-hidden="true" className="h-3 w-3" />
+                            {progress.done}/{progress.total}
+                        </Chip>
+                    )}
                     {task.estimate_hours != null && (
                         <Chip title={`Estimate ${formatHours(task.estimate_hours)}`}>
                             <Timer aria-hidden="true" className="h-3 w-3" />

@@ -108,6 +108,14 @@ type PushRequest struct {
 	Summary  *models.AISummary
 }
 
+type Subtask interface {
+	List(ctx context.Context, userID, taskID uuid.UUID) ([]models.Subtask, error)
+	Create(ctx context.Context, userID, taskID uuid.UUID, in models.SubtaskCreate) (*models.Subtask, error)
+	Update(ctx context.Context, userID, subtaskID uuid.UUID, patch models.SubtaskPatch) (*models.Subtask, error)
+	Delete(ctx context.Context, userID, subtaskID uuid.UUID) error
+	Progress(ctx context.Context, userID uuid.UUID, taskIDs []uuid.UUID) (map[uuid.UUID]models.SubtaskProgress, error)
+}
+
 type Share interface {
 	CreateLink(ctx context.Context, userID uuid.UUID, in ShareLinkInput) (*models.ShareLink, error)
 	ListLinks(ctx context.Context, userID uuid.UUID) ([]models.ShareLink, error)

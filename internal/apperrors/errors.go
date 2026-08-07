@@ -35,6 +35,10 @@ var (
 	ErrAIUnavailable = errors.New("AI provider is temporarily unavailable")
 	ErrAIBadResponse = errors.New("AI provider returned an unusable response")
 
+	ErrSubtaskNotFound     = errors.New("subtask not found or permission denied")
+	ErrEmptySubtaskTitle   = errors.New("subtask title cannot be empty")
+	ErrSubtaskTitleTooLong = errors.New("subtask title is too long")
+
 	ErrShareLinkNotFound = errors.New("share link not found, revoked or expired")
 	ErrInvalidShareKind  = errors.New("invalid share kind")
 	ErrShareLabelTooLong = errors.New("share label is too long")

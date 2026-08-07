@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { AlertTriangle, Loader2, Save, Trash2, X } from 'lucide-react';
+import { SubtaskChecklist } from './SubtaskChecklist';
 import type { Sprint, Task, TaskInput, TaskPriority, TaskStatus } from '../../types';
 import {
     BOARD_STATUSES,
@@ -448,6 +449,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                             </select>
                         </div>
                     </div>
+
+                    {isEdit && task?.id && (
+                        <div className="rounded-xl border border-border bg-code-bg/40 p-3">
+                            <SubtaskChecklist taskId={task.id} />
+                        </div>
+                    )}
 
                     {error && (
                         <p
