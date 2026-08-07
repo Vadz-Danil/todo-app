@@ -87,6 +87,7 @@ func main() {
 	summaryRepo := repository.NewSummaryPostgres(db)
 	exportRepo := repository.NewExportPostgres(db)
 	shareRepo := repository.NewSharePostgres(db)
+	subtaskRepo := repository.NewSubtaskPostgres(db)
 
 	// A nil interface (not a typed nil) is what disables the AI features.
 	var geminiClient gemini.Client
@@ -109,6 +110,7 @@ func main() {
 	aiService := service.NewAIService(geminiClient, planningRepo, summaryRepo, sprintRepo, analyticsService, taskService, zapLogger)
 	exportService := service.NewExportService(exportRepo, analyticsService, taskService, sprintService, cfg.Export, zapLogger)
 	shareService := service.NewShareService(shareRepo, taskService, analyticsService, userRepo, zapLogger)
+	subtaskService := service.NewSubtaskService(subtaskRepo, taskService, zapLogger)
 	emailService, err := service.NewEmailService(mailer, zapLogger)
 	if err != nil {
 		zapLogger.Fatal("failed to initialize email service", zap.Error(err))
@@ -126,6 +128,7 @@ func main() {
 		Sprint:    handler.NewSprintHandler(sprintService),
 		Export:    handler.NewExportHandler(exportService, analyticsService, authService),
 		Share:     handler.NewShareHandler(shareService, analyticsService),
+		Subtask:   handler.NewSubtaskHandler(subtaskService),
 	}, cfg.CORSOrigins)
 	zapLogger.Info("CORS origins allowed", zap.Strings("origins", cfg.CORSOrigins))
 

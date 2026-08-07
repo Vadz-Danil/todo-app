@@ -84,6 +84,15 @@ type SummaryRepository interface {
 	ListSummaries(ctx context.Context, userID uuid.UUID, limit int) ([]models.AISummary, error)
 }
 
+type SubtaskRepository interface {
+	ListByTask(ctx context.Context, userID, taskID uuid.UUID) ([]models.Subtask, error)
+	ProgressByTasks(ctx context.Context, userID uuid.UUID, taskIDs []uuid.UUID) (map[uuid.UUID]models.SubtaskProgress, error)
+	NextPosition(ctx context.Context, userID, taskID uuid.UUID) (float64, error)
+	Create(ctx context.Context, item *models.Subtask) error
+	Update(ctx context.Context, userID, subtaskID uuid.UUID, patch models.SubtaskPatch) (*models.Subtask, error)
+	Delete(ctx context.Context, userID, subtaskID uuid.UUID) error
+}
+
 type ShareRepository interface {
 	CreateLink(ctx context.Context, link *models.ShareLink) error
 	GetByTokenHash(ctx context.Context, tokenHash string) (*models.ShareLink, error)

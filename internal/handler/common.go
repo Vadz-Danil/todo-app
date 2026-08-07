@@ -98,6 +98,7 @@ func respondServiceError(c *gin.Context, err error, fallbackMessage string) bool
 		errors.Is(err, apperrors.ErrSessionNotFound),
 		errors.Is(err, apperrors.ErrExportTargetNotFound),
 		errors.Is(err, apperrors.ErrShareLinkNotFound),
+		errors.Is(err, apperrors.ErrSubtaskNotFound),
 		errors.Is(err, apperrors.ErrUserNotFound):
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 
@@ -106,6 +107,8 @@ func respondServiceError(c *gin.Context, err error, fallbackMessage string) bool
 		errors.Is(err, apperrors.ErrInvalidTaskPriority),
 		errors.Is(err, apperrors.ErrInvalidTaskHours),
 		errors.Is(err, apperrors.ErrTaskTitleTooLong),
+		errors.Is(err, apperrors.ErrEmptySubtaskTitle),
+		errors.Is(err, apperrors.ErrSubtaskTitleTooLong),
 		errors.Is(err, apperrors.ErrSprintNotOwned),
 		errors.Is(err, apperrors.ErrReviewerRequired),
 		errors.Is(err, apperrors.ErrNothingToUpdate),

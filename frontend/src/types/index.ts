@@ -488,3 +488,18 @@ export interface SharedView {
     task_count: number;
     analytics?: Dashboard;
 }
+
+export interface Subtask {
+    id: string;
+    task_id: string;
+    title: string;
+    done: boolean;
+    position: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface SubtaskProgress {
+    done: number;
+    total: number;
+}

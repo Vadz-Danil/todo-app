@@ -4,6 +4,8 @@ import type { Sprint, Task, TaskInput, TaskStatus } from '../../types';
 import { BOARD_STATUSES, STATUS_LABELS } from '../../types';
 import { useToast } from '../../context/ToastContext';
 import { KanbanColumn } from './KanbanColumn';
+import { subtaskProgress } from '../../api/endpoints';
+import type { SubtaskProgress } from '../../types';
 import { TaskModal } from './TaskModal';
 
 export interface KanbanBoardProps {
@@ -143,6 +145,35 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     useEffect(() => {
         setLocalTasks(safeTasks);
     }, [safeTasks]);
+
+    const [progress, setProgress] = useState<Record<string, SubtaskProgress>>({});
+
+    // The card badge is derived data, so it loads separately and never blocks
+    // the board. Keyed on the sorted id list so it refetches when tasks are
+    // added or removed, not on every unrelated task edit.
+    const taskIdKey = useMemo(
+        () => safeTasks.map((t) => t.id).sort().join(','),
+        [safeTasks]
+    );
+
+    useEffect(() => {
+        const ids = taskIdKey ? taskIdKey.split(',') : [];
+        if (ids.length === 0) {
+            setProgress({});
+            return;
+        }
+        let cancelled = false;
+        void subtaskProgress(ids)
+            .then((p) => {
+                if (!cancelled) setProgress(p);
+            })
+            .catch(() => {
+                // A missing badge is not worth interrupting the board over.
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [taskIdKey]);
 
     const columns = useMemo<Columns>(() => {
         const map: Columns = { TODO: [], IN_PROGRESS: [], IN_REVIEW: [], DONE: [] };
@@ -336,6 +367,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                         key={status}
                         status={status}
                         tasks={columns[status]}
+                        progress={progress}
                         loading={loading}
                         draggingId={draggingId}
                         dropIndex={dropTarget?.status === status ? dropTarget.index : null}
